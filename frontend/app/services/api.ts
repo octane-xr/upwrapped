@@ -61,7 +61,7 @@ export async function generateWrapped(
         year: year || new Date().getFullYear(),
       },
       {
-        timeout: 30000, // 30 seconds
+        timeout: 60000,
       }
     );
 
@@ -69,11 +69,14 @@ export async function generateWrapped(
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       if (error.response) {
-
+        if (error.response.status === 429) {
+          const retryAfter = error.response.headers['retry-after'] || '5';
+          throw new Error(`Demasiados intentos. Esperá ${retryAfter} segundos antes de intentar de nuevo.`);
+        }
         const message = error.response.data?.error || 'Error del servidor';
         throw new Error(message);
       } else if (error.code === 'ECONNABORTED') {
-        throw new Error('La solicitud tardó demasiado. Por favor, intentá de nuevo.');
+        throw new Error('La solicitud tardó demasiado. El servidor puede estar iniciando. Intentá de nuevo en unos segundos.');
       } else if (error.code === 'ERR_NETWORK') {
         throw new Error('No se pudo conectar con el servidor. Verificá tu conexión.');
       }
@@ -97,7 +100,7 @@ export async function downloadPDF(
       },
       {
         responseType: 'blob',
-        timeout: 30000,
+        timeout: 60000,
       }
     );
 

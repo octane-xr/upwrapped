@@ -39,10 +39,12 @@ app.use(cors(corsOptions));
 
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10', 10),
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '50', 10),
   message: 'Demasiados intentos. Por favor, esperá unos minutos.',
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
 });
 
 app.use('/api/', limiter as any);
@@ -51,7 +53,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const timeout = parseInt(process.env.REQUEST_TIMEOUT_MS || '15000', 10);
+  const timeout = parseInt(process.env.REQUEST_TIMEOUT_MS || '60000', 10);
   req.setTimeout(timeout);
   res.setTimeout(timeout);
   next();
